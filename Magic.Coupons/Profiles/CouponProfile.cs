@@ -9,6 +9,7 @@ namespace Magic.Coupons.Profiles
         public CouponProfile() 
         { 
             CreateMap<Coupon, CouponCreateRequestDto>().ReverseMap();
+            CreateMap<Coupon, CouponUpdateRequestDto>().ReverseMap();
             CreateMap<Coupon, CouponResponseDto>().ReverseMap();
         }
     }
