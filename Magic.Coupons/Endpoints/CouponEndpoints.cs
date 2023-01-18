@@ -8,18 +8,28 @@ using System.Net;
 
 namespace Magic.Coupons.Endpoints
 {
-    public static class CouponEndpoint
+    public static class CouponEndpoints
     {
         public static void ConfigureCouponEndpoint(this WebApplication app)
         {
-            // TODO: Adds Api Response builder
-            // TODO: Removes duplicated code
+            // TODO: Adds Api Response builder and removes duplicated code
             app.MapGet("/api/coupons", GetAllCouponsAsync)
                 .WithName("GetCoupons")
                 .Produces<IEnumerable<ApiResponse>>((int)HttpStatusCode.OK);
 
             app.MapGet("/api/coupons/{id:int}", GetCouponByIdAsync)
                 .WithName("GetCoupon")
+                .AddEndpointFilter(async(context, next) =>
+                {
+                    var id = context.GetArgument<int>(2);
+
+                    if (id < 1)
+                    {
+                        return Results.BadRequest($"Parameter {nameof(id)} must be greater than 0.");
+                    }
+
+                    return await next(context);
+                })
                 .Produces<ApiResponse>((int)HttpStatusCode.OK)
                 .Produces((int)HttpStatusCode.NotFound);
 
@@ -42,7 +52,9 @@ namespace Magic.Coupons.Endpoints
                 .Produces((int)HttpStatusCode.NotFound);
         }
 
-        private async static Task<IResult> GetAllCouponsAsync(ICouponRepository couponRepository, ILogger<Program> logger)
+        private static async Task<IResult> GetAllCouponsAsync(
+            ICouponRepository couponRepository, 
+            ILogger<Program> logger)
         {
             var response = new ApiResponse();
 
@@ -57,7 +69,7 @@ namespace Magic.Coupons.Endpoints
             return Results.Ok(response);
         }
 
-        private async static Task<IResult> GetCouponByIdAsync(
+        private static async Task<IResult> GetCouponByIdAsync(
             ICouponRepository couponRepository, 
             ILogger<Program> logger, 
             int id)
@@ -83,7 +95,7 @@ namespace Magic.Coupons.Endpoints
             return Results.Ok(response);
         }
 
-        private async static Task<IResult> CreateCouponAsync(
+        private static async Task<IResult> CreateCouponAsync(
             ICouponRepository couponRepository,
             ILogger<Program> logger,
             IMapper mapper,
@@ -125,7 +137,7 @@ namespace Magic.Coupons.Endpoints
             return Results.CreatedAtRoute("GetCoupon", new { id = coupon.Id }, response);
         }
 
-        private async static Task<IResult> UpdateCouponAsync(
+        private static async Task<IResult> UpdateCouponAsync(
             ICouponRepository couponRepository,
             ILogger<Program> logger,
             IMapper mapper,
@@ -172,7 +184,7 @@ namespace Magic.Coupons.Endpoints
             return Results.Ok(response);
         }
 
-        private async static Task<IResult> DeleteCouponAsync(
+        private static async Task<IResult> DeleteCouponAsync(
             ICouponRepository couponRepository, 
             ILogger<Program> logger,
             int id)
